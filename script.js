@@ -1,4 +1,4 @@
-console.log("hello");
+import {gaussianConcentration} from './engine.js';
 
 const screen = document.querySelector("#screen");
 screen.height = (window.innerHeight * 0.75);
@@ -27,7 +27,51 @@ function Stack(diameter, height, posX, posY = 0) {
     }
 }
 
-function Smoke() {
+function Smoke(diameter, height, posX, posY = 0) {
+
+    this.height = height;
+    let stackParameters = {
+        discharge: 20,
+        height: this.height,
+        diameter: diameter
+    }
+    let envParameters = {
+        windVelocity: 2,
+        stabilityClass: "D"
+    }
+
+    this.render = function(context, baseHeight) {
+
+        let intervalX = 3, intervalY = 3;
+
+        for(let i = 0; i < screen.width; i += intervalX) {
+            for(let j = -100 + intervalY; j <= 100; j += intervalY) {
+                let concentration = gaussianConcentration(i, 0, j+this.height, stackParameters, envParameters);
+
+                // calculate color in shade of gray
+                let color = 256;
+                if(concentration > 1000) {
+                    color = 89;
+                } else {
+                    color = 256 - Math.floor(concentration * 128/ 1000);
+                }
+
+                // ignore rendering of area where concentration is less than 1 microgram
+                if(color > 255) continue;
+
+                // console.log(i, baseHeight - j - this.height - 300, baseHeight - j - this.height - intervalY - 300, baseHeight);
+                context.beginPath();
+                context.arc(i + posX + intervalX/2, baseHeight - j - this.height + intervalY/2, intervalY/2, 0, 2 * Math.PI)
+                context.strokeStyle = "#d9d9d9"
+                context.stroke();
+                context.fillStyle = `rgb(${color}, ${color}, ${color})`;
+                // context.fillRect(posX + i, baseHeight - j - this.height - intervalY - 200, posX + i + intervalX, baseHeight - j - this.height - 200);
+                context.fill();
+                context.closePath();
+
+            }
+        }
+    }
 
 }
 
@@ -148,27 +192,34 @@ function RenderFrame(context) {
     this.stackBase = screen.height - 50;
     this.stackHeight = 100;
     this.stackDiameter = 20;
-    this.stackPosX = 10;
+    this.stackPosX = 70;
 
     const scaleX = new ScaleX(50);
     const scaleY = new ScaleY(50);
     const ground = new Ground(this.stackBase);
     const sky = new Sky();
     const cloudCover = new CloudCover(10, 450);
-    const stack1 = new Stack(this.stackDiameter, this.stackHeight, posX = 70);
+    const stack1 = new Stack(this.stackDiameter, this.stackHeight, this.stackPosX);
+    const smoke1 = new Smoke(this.stackDiameter, this.stackHeight, this.stackPosX)
+
+
     this.context = context;
 
     
     ground.render(this.context);
     sky.render(this.context, this.stackBase);
     cloudCover.render(this.context);
+
+    smoke1.render(this.context, this.stackBase);
     stack1.render(this.context, this.stackBase);
+    
     scaleX.render(this.context);
     scaleY.render(this.context, this.stackBase);
+    
 
 }
 
-RenderFrame(screen.getContext("2d"));
+const render = new RenderFrame(screen.getContext("2d"));
 
 
 

@@ -3,15 +3,27 @@
 ## Workflow
 
 User gets initial screen containing a stack, emitting smoke, and time averaged plume line
+
 User can change the parameters
+
 ### Stack Parameters
-posx, posy, height, diameter of opening
+- posx, 
+- posy, 
+- height, 
+- diameter of opening, 
+- discharge
+
+### Environment parameters
+- Cloud cover, 
+- wind speed, 
+- temperature, 
+- day/night, 
+- stability class
+
 ### Ground
 ### Sky
 ### Cloud
 ### Smoke
-
-### Environment parameters
 
 ## Skills required
 - HTML canvas
@@ -24,11 +36,21 @@ posx, posy, height, diameter of opening
 - [JS OOP](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object-oriented_JS)
 - [Color Picker](https://www.w3schools.com/colors/colors_picker.asp)
 - [Ellipse in HTML5 canvas](https://stackoverflow.com/questions/2172798/how-to-draw-an-oval-in-html5-canvas)
+- [Dispersion coefficient](http://courses.washington.edu/cee490/DISPCOEF4WP.htm)
 
-## Todo
+## Architecture
 - model.js will maintain all the objects and its state
 - controller.js will change the state of object, and call necessary view component
-- script.js contains view layer, need to seggregate model all state from view.
-- make engine for smoke
+- script.js contains view layer, 
+
+## Todo
+- seggregate model, and controller from view
+- [x] make engine for smoke
 - render smoke
-- render cloud: bezier curves, arcs, ellipse
+  - Give boundary condition
+  - Use specific grayscale for increasing contrast in smoke concentration
+  - Plume rise calculation
+- [x] render cloud: bezier curves, arcs, ellipse
+- Add controller
+  - Add a new stack
+  - Change environment parameters
