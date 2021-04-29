@@ -12,6 +12,8 @@ User can change the parameters
 - height, 
 - diameter of opening, 
 - discharge
+- limits of discharge (very severe, severe, moderately, good, excellent)
+- background concentration
 
 ### Environment parameters
 - Cloud cover, 

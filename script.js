@@ -4,6 +4,8 @@ const screen = document.querySelector("#screen");
 screen.height = (window.innerHeight * 0.75);
 screen.width = (window.innerWidth * 0.75);
 
+screen.width = 2000;
+
 // Components
 function Stack(diameter, height, posX, posY = 0) {
     
@@ -22,13 +24,13 @@ function Stack(diameter, height, posX, posY = 0) {
         context.closePath();
         context.strokeStyle = "#0d0d0d";
         context.stroke();
-        context.fillStyle = "#993300";
+        context.fillStyle = "rgb(102, 34, 0)";
         context.fill();
     }
 }
 
 function Smoke(diameter, height, posX, posY = 0) {
-
+    // discharge in gram/s
     this.height = height;
     let stackParameters = {
         discharge: 20,
@@ -36,36 +38,31 @@ function Smoke(diameter, height, posX, posY = 0) {
         diameter: diameter
     }
     let envParameters = {
-        windVelocity: 2,
+        windVelocity: 7,
         stabilityClass: "D"
     }
 
-    this.render = function(context, baseHeight) {
+    this.render = function(context, baseHeight, heightOfConcern = 100) {
 
         let intervalX = 3, intervalY = 3;
 
         for(let i = 0; i < screen.width; i += intervalX) {
-            for(let j = -100 + intervalY; j <= 100; j += intervalY) {
+            for(let j = -100 + intervalY; j <= heightOfConcern; j += intervalY) {
                 let concentration = gaussianConcentration(i, 0, j+this.height, stackParameters, envParameters);
 
-                // calculate color in shade of gray
-                let color = 256;
-                if(concentration > 1000) {
-                    color = 89;
-                } else {
-                    color = 256 - Math.floor(concentration * 128/ 1000);
-                }
-
                 // ignore rendering of area where concentration is less than 1 microgram
-                if(color > 255) continue;
+                if(concentration < 1) continue
+
+                // calculate color in shade of gray
+                let color = colorUtility(concentration);
 
                 // console.log(i, baseHeight - j - this.height - 300, baseHeight - j - this.height - intervalY - 300, baseHeight);
                 context.beginPath();
                 context.arc(i + posX + intervalX/2, baseHeight - j - this.height + intervalY/2, intervalY/2, 0, 2 * Math.PI)
                 context.strokeStyle = "#d9d9d9"
                 context.stroke();
-                context.fillStyle = `rgb(${color}, ${color}, ${color})`;
-                // context.fillRect(posX + i, baseHeight - j - this.height - intervalY - 200, posX + i + intervalX, baseHeight - j - this.height - 200);
+                // context.fillStyle = `rgb(${color}, ${color}, ${color})`;
+                context.fillStyle = color;
                 context.fill();
                 context.closePath();
 
@@ -74,6 +71,32 @@ function Smoke(diameter, height, posX, posY = 0) {
     }
 
 }
+
+function colorUtility(concentration, limits = []) {
+
+    if(concentration < 50) {
+        return "rgb(0, 204, 0)";
+    } else if (concentration < 100) {
+        return "rgb(102, 255, 102)"
+    } else if (concentration < 250) {
+        return "rgb(255, 255, 26)"
+    } else if (concentration < 350) {
+        return "rgb(255, 153, 51)"
+    } else if (concentration < 430) {
+        return "rgb(230, 0, 0)"
+    } else {
+        return "rgb(204, 41, 0)"
+    }
+
+    // if(concentration > 1000) {
+    //     color = 89;
+    // } else {
+    //     color = 256 - Math.floor(concentration * 128/ 1000);
+    // }
+    // if(color > 255) continue;
+
+}
+
 
 function Sky() {
 
