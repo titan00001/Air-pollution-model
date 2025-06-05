@@ -6,64 +6,74 @@ This project simulates and visualizes air pollution dispersion from a smoke stac
 ## Key Features
 - Interactive visualization of a smoke plume.
 - Adjustable parameters for:
-    - **Stack:** Position (x, y), height, opening diameter, gas exit velocity, gas temperature, pollutant emission rate.
-    - **Environment:** Ambient temperature, wind speed, atmospheric stability class, cloud cover, background pollution concentration.
+    - **Stack:** Physical height, diameter, exit velocity, gas temperature, pollutant emission rate. (Stack X position is fixed for now).
+    - **Environment:** Ambient temperature, wind velocity, wind direction (parameter stored, visual rotation pending), atmospheric stability class, background pollution concentration.
 - Visual representation of ground, sky, and clouds.
 - Real-time updates to the visualization based on parameter changes.
+- Point-specific concentration check: Input X, Y, Z coordinates to get the calculated concentration at that point (includes background concentration).
+- Grayscale plume rendering based on concentration intensity.
 
 ## Architecture
 The application follows a Model-View-Controller (MVC) pattern:
 
 -   **`model.js` (Model):**
-    -   Manages all simulation data, including the state of stacks, environmental conditions, and pollutant concentrations.
-    -   Contains the core logic for pollution dispersion calculations (Gaussian model, plume rise equations).
+    -   Manages all simulation data, including default stack and environmental conditions, and pollutant concentrations.
+    -   Contains the core logic for pollution dispersion calculations (Gaussian model, Briggs plume rise equations, dispersion coefficients interpolation).
     -   Does not interact directly with the DOM.
--   **`view.js` (View) (initially `script.js`):**
-    -   Responsible for rendering the visual representation of the simulation on the HTML canvas based on data from the Model.
-    -   Handles all DOM manipulations related to the visualization.
+-   **`view.js` (View):
+    -   Responsible for rendering the visual representation of the simulation on the HTML canvas based on data from the Model (passed via Controller).
+    -   Handles all DOM manipulations related to the visualization (stack, plume, ground, sky, clouds, scales).
 -   **`controller.js` (Controller):**
     -   Acts as the intermediary between the Model and the View.
-    -   Handles user inputs from the HTML interface (e.g., parameter changes).
-    -   Updates the Model based on user actions.
-    -   Instructs the View to re-render when the Model changes.
+    -   Handles user inputs from the HTML interface (parameter changes, point concentration checks).
+    -   Updates the application state (current stack and environment parameters).
+    -   Requests data from the Model (e.g., concentration calculations).
+    -   Instructs the View to re-render when the state changes or new data is available.
 
 ## Development Roadmap
 
 ### Phase 1: Core Functionality & Architectural Refinement
--   [x] **Refine MVC Structure:** Fully segregated `model.js`, `view.js` (refactored from `script.js`), and `controller.js` responsibilities. `model.js` now contains all core simulation logic.
--   [x] **Smoke Engine:** Initial engine for smoke particle behavior.
--   [ ] **Complete Smoke Rendering:**
-    -   [~] Implement plume rise calculations (e.g., Briggs equations). (Basic implementation added to `model.js`; further refinement, especially for stable conditions, is pending).
-    -   [x] Define and apply boundary conditions (ground reflection, inversion layers if applicable). (Ground reflection included in Gaussian formula; inversion layers are a future consideration).
-    -   [x] Use a grayscale gradient or color map for smoke concentration visualization. (Grayscale implemented).
--   [x] **Cloud Rendering:** Basic cloud rendering using bezier curves, arcs, ellipse.
--   [ ] **Controller Implementation:**
+-   [x] **Refine MVC Structure:** Fully segregated `model.js`, `view.js`, and `controller.js` responsibilities. `model.js` now contains all core simulation logic.
+-   [x] **Smoke Engine Logic:** Core Gaussian calculation implemented in `model.js`.
+-   [x] **Complete Smoke Rendering:**
+    -   [x] Implement plume rise calculations (e.g., Briggs equations). (Basic implementation in `model.js`; further refinement for stable conditions/momentum plumes is a Phase 3 item).
+    -   [x] Define and apply boundary conditions (ground reflection included in Gaussian formula).
+    -   [x] Use a grayscale gradient or color map for smoke concentration visualization.
+-   [x] **Cloud Rendering:** Basic cloud rendering implemented.
+-   [x] **Controller Implementation:**
     -   [ ] Enable adding new stacks to the simulation.
-    -   [ ] Implement controls for changing all environment and stack parameters. (Architectural support in controller exists; UI elements are pending - aligns with Phase 2).
+    -   [x] Implement controls for changing all key environment and stack parameters.
+-   [x] **Point Concentration Check:** Added UI and functionality to check concentration at user-defined X,Y,Z coordinates.
 
 ### Phase 2: UI/UX Enhancements & Parameter Validation
--   [ ] **User-Friendly Controls:** Implement intuitive HTML controls (sliders, dropdowns, input fields) for all parameters with clear labels and units.
--   [ ] **Real-time Feedback:** Ensure immediate visual updates upon parameter changes.
--   [ ] **Input Validation:** Add validation for all user inputs to ensure they are within realistic and operational ranges.
+-   [x] **User-Friendly Controls:** Implemented HTML controls (sliders, dropdowns, number inputs) for all key parameters with labels and live value displays.
+-   [x] **Real-time Feedback:** Visual updates occur immediately upon parameter changes.
+-   [ ] **Input Validation:** Add more robust validation for all user inputs in `controller.js` (e.g., preventing non-numeric inputs where numbers are expected, handling extreme values gracefully beyond HTML min/max if necessary).
+-   [ ] **Visual Indication of Wind Direction:** Add a visual cue (e.g., compass rose or arrow) on the canvas to show the currently set wind direction.
 
 ### Phase 3: Model Refinement & Advanced Features
--   [ ] **Dispersion Coefficients:** Implement accurate selection and calculation of dispersion coefficients (e.g., Pasquill-Gifford `σy`, `σz`) based on stability class and downwind distance.
--   [ ] **Multiple Pollutant Sources:** Ensure the model correctly handles and visualizes overlapping plumes from multiple stacks.
--   [ ] (Optional) **Time Evolution:** Explore adding a time component for dynamic simulations.
--   [ ] (Optional) **Enhanced Visuals:** Improve the realism and detail of ground, sky, and plume graphics.
+-   [ ] **Refine Plume Rise Calculations:** Improve Briggs equations in `model.js`, especially for stable conditions and momentum-dominated plumes. Consider different plume rise formulas if needed.
+-   [ ] **Refine Dispersion Coefficients (`sigmaY`, `sigmaZ`):** 
+    -   [ ] Verify/complete data for Stability Class 'A' in `model.js`.
+    -   [ ] Consider alternative methods for `sigmaY`, `sigmaZ` if more precision is needed for specific scenarios (e.g., urban vs. rural, different averaging times).
+-   [ ] **Implement Plume Rotation for Wind Direction:** Modify `model.js` or `controller.js` and `view.js` to correctly rotate the plume based on the `windDirection` parameter.
+-   [ ] **Inversion Layers:** (Advanced) Model the effect of an atmospheric inversion layer capping vertical dispersion.
+-   [ ] **Multiple Pollutant Sources:** Allow users to add and configure multiple stacks. This involves significant changes to state management in `controller.js`, calculation loops, and rendering in `view.js`.
+-   [ ] (Optional) **Time Evolution:** Explore adding a time component for dynamic simulations (e.g., changing meteorological conditions over time).
+-   [ ] (Optional) **Enhanced Visuals:** Improve the realism and detail of ground, sky, and plume graphics. Add visual representation of the checked concentration point on canvas.
 
 ### Phase 4: Documentation & Testing
--   [ ] **Code Comments:** Add comprehensive comments for complex logic in the Model and View.
--   [ ] **`README.md` Update:** Finalize project description, setup, usage, and parameter explanations.
+-   [~] **Code Comments:** Added comments to explain logic in model, view, and controller. Further review for completeness can be done.
+-   [~] **`README.md` Update:** This document is being actively updated. Final review for project description, setup, usage, and parameter explanations needed upon feature completion.
 -   [ ] **Testing:**
-    -   [ ] Conduct thorough manual testing with diverse parameter sets.
+    -   [ ] Conduct thorough manual testing with diverse parameter sets and edge cases.
     -   [ ] (Optional) Implement unit tests for critical calculation functions in `model.js`.
 
 ## Skills Utilized
 - HTML Canvas API
 - CSS for styling
-- JavaScript (Object-Oriented Programming)
-- Gaussian dispersion principles
+- JavaScript (Object-Oriented Programming, Modules)
+- Gaussian dispersion principles & Briggs plume rise equations
 
 ## Resources & Inspirations
 - [Resize canvas using js](https://stackoverflow.com/questions/9251480/set-canvas-size-using-javascript/9251497)
@@ -71,61 +81,10 @@ The application follows a Model-View-Controller (MVC) pattern:
 - [Color Picker (for UI ideas)](https://www.w3schools.com/colors/colors_picker.asp)
 - [Ellipse in HTML5 canvas](https://stackoverflow.com/questions/2172798/how-to-draw-an-oval-in-html5-canvas)
 - [Dispersion coefficient reference](http://courses.washington.edu/cee490/DISPCOEF4WP.htm)
+- Standard Air Quality Modeling textbooks and EPA guidelines for Gaussian models and Briggs equations.
 
 ## Getting Started
-*(Instructions on how to set up and run the project will be added here.)*
-
-User gets initial screen containing a stack, emitting smoke, and time averaged plume line
-
-User can change the parameters
-
-### Stack Parameters
-- posx, 
-- posy, 
-- height, 
-- diameter of opening, 
-- discharge
-- limits of discharge (very severe, severe, moderately, good, excellent)
-- background concentration
-
-### Environment parameters
-- Cloud cover, 
-- wind speed, 
-- temperature, 
-- day/night, 
-- stability class
-
-### Ground
-### Sky
-### Cloud
-### Smoke
-
-## Skills required
-- HTML canvas
-- CSS styling
-- JS OOP
-- Gaussian distribution function
-
-## Experience
-- [Resize canvas using js](https://stackoverflow.com/questions/9251480/set-canvas-size-using-javascript/9251497)
-- [JS OOP](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object-oriented_JS)
-- [Color Picker](https://www.w3schools.com/colors/colors_picker.asp)
-- [Ellipse in HTML5 canvas](https://stackoverflow.com/questions/2172798/how-to-draw-an-oval-in-html5-canvas)
-- [Dispersion coefficient](http://courses.washington.edu/cee490/DISPCOEF4WP.htm)
-
-## Architecture
-- model.js will maintain all the objects and its state
-- controller.js will change the state of object, and call necessary view component
-- script.js contains view layer, 
-
-## Todo
-- seggregate model, and controller from view
-- [x] make engine for smoke
-- render smoke
-  - Give boundary condition
-  - Use specific grayscale for increasing contrast in smoke concentration
-  - Plume rise calculation
-- [x] render cloud: bezier curves, arcs, ellipse
-- Add controller
-  - Add a new stack
-  - Change environment parameters
+1.  Clone this repository.
+2.  Open `index.html` in a modern web browser that supports ES6 modules.
+3.  Adjust parameters using the UI controls and observe the plume.
+4.  Use the "Check Concentration at Point" feature to query specific locations.
