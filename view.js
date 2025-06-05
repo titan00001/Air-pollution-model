@@ -2,6 +2,7 @@
 
 let canvas = null;
 let ctx = null;
+let highlightedPoint = null;
 
 // Will be set by controller based on model data or UI
 // let currentStackHeight = 100; // This is better managed by the model state passed to drawScene
@@ -259,6 +260,20 @@ function drawScene(modelState) {
     }
     stackDrawable.render(ctx, groundSurfaceY);
     
+    // Draw the highlighted point if it exists
+    if (highlightedPoint) {
+        ctx.beginPath();
+        ctx.arc(highlightedPoint.x, highlightedPoint.y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.closePath();
+
+        // Draw the concentration label
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText(`${highlightedPoint.concentration.toFixed(2)} µg/m³`, highlightedPoint.x + 10, highlightedPoint.y + 5);
+    }
+    
     // Adjust Y scale to be based on physical stack height and extend a bit for plume
     const scaleYMaxHeight = stackParams.physicalHeight + (stackParams.height - stackParams.physicalHeight) + 50; // physical + plume rise + buffer
     const scaleX = new ScaleX(50, canvas.width, groundSurfaceY);
@@ -267,4 +282,14 @@ function drawScene(modelState) {
     scaleY.render(ctx);
 }
 
-export { initView, drawScene, Stack, Smoke, Sky, Ground, Cloud, CloudCover, ScaleX, ScaleY, colorUtility }; 
+/**
+ * Stores the coordinates of a point to be highlighted on the canvas.
+ * @param {number} x - The x-coordinate on the canvas.
+ * @param {number} y - The y-coordinate on the canvas.
+ * @param {number} concentration - The concentration value to display.
+ */
+function highlightPoint(x, y, concentration) {
+    highlightedPoint = { x, y, concentration };
+}
+
+export { initView, drawScene, canvas, highlightPoint, Stack, Smoke, Sky, Ground, Cloud, CloudCover, ScaleX, ScaleY, colorUtility }; 

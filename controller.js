@@ -9,9 +9,8 @@ let currentEnvParams = { ...Model.defaultEnvironmentParameters };
 
 // --- UI Element References ---
 let stackHeightSlider, windVelocitySlider, windDirectionInput;
-let stackHeightValueSpan, windVelocityValueSpan, windDirectionValueSpan;
+let stackHeightValueSpan, windVelocityValueSpan;
 let stabilityClassSelect, ambientTemperatureInput, backgroundConcentrationInput;
-let ambientTemperatureValueSpan, backgroundConcentrationValueSpan;
 let pointXInput, pointYInput, pointZInput, checkConcentrationButton, pointConcentrationResultSpan;
 
 // --- Initialization ---
@@ -29,13 +28,10 @@ function init() {
     windDirectionInput = document.getElementById('windDirection');
     stackHeightValueSpan = document.getElementById('stackHeightValue');
     windVelocityValueSpan = document.getElementById('windVelocityValue');
-    windDirectionValueSpan = document.getElementById('windDirectionValue');
 
     stabilityClassSelect = document.getElementById('stabilityClass');
     ambientTemperatureInput = document.getElementById('ambientTemperature');
     backgroundConcentrationInput = document.getElementById('backgroundConcentration');
-    ambientTemperatureValueSpan = document.getElementById('ambientTemperatureValue');
-    backgroundConcentrationValueSpan = document.getElementById('backgroundConcentrationValue');
 
     // Get UI elements for point concentration check
     pointXInput = document.getElementById('pointX');
@@ -57,7 +53,6 @@ function init() {
     }
     if (windDirectionInput) {
         windDirectionInput.value = currentEnvParams.windDirection;
-        if(windDirectionValueSpan) windDirectionValueSpan.textContent = currentEnvParams.windDirection;
         windDirectionInput.addEventListener('input', handleWindDirectionChange);
     }
     if (stabilityClassSelect) {
@@ -66,12 +61,10 @@ function init() {
     }
     if (ambientTemperatureInput) {
         ambientTemperatureInput.value = currentEnvParams.ambientTemperature;
-        if(ambientTemperatureValueSpan) ambientTemperatureValueSpan.textContent = currentEnvParams.ambientTemperature;
         ambientTemperatureInput.addEventListener('input', handleAmbientTemperatureChange);
     }
     if (backgroundConcentrationInput) {
         backgroundConcentrationInput.value = currentEnvParams.backgroundConcentration;
-        if(backgroundConcentrationValueSpan) backgroundConcentrationValueSpan.textContent = currentEnvParams.backgroundConcentration;
         backgroundConcentrationInput.addEventListener('input', handleBackgroundConcentrationChange);
     }
 
@@ -152,7 +145,6 @@ function handleWindVelocityChange(event) {
 function handleWindDirectionChange(event) {
     const newDirection = parseFloat(event.target.value);
     currentEnvParams.windDirection = newDirection;
-    if(windDirectionValueSpan) windDirectionValueSpan.textContent = newDirection;
     // Note: The current Gaussian model in model.js does not use windDirection to rotate the plume.
     // This parameter is stored and can be used for future enhancements (e.g., visual compass, coordinate rotation).
     console.log(`Wind direction changed to: ${newDirection}°N. Model calculation itself is not yet rotated.`);
@@ -168,14 +160,12 @@ function handleStabilityClassChange(event) {
 function handleAmbientTemperatureChange(event) {
     const newTemp = parseFloat(event.target.value);
     currentEnvParams.ambientTemperature = newTemp;
-    if(ambientTemperatureValueSpan) ambientTemperatureValueSpan.textContent = newTemp;
     requestRender();
 }
 
 function handleBackgroundConcentrationChange(event) {
     const newBgConc = parseFloat(event.target.value);
     currentEnvParams.backgroundConcentration = newBgConc;
-    if(backgroundConcentrationValueSpan) backgroundConcentrationValueSpan.textContent = newBgConc;
     // Note: The Gaussian model calculates concentration *added* by the source.
     // Visualizing background concentration would require adding it to the calculated values or a separate visual layer.
     // Currently, it's stored but not directly added to the plume's visual intensity.
@@ -207,8 +197,10 @@ function handleCheckPointConcentration() {
 
     pointConcentrationResultSpan.textContent = `${totalConcentration.toFixed(2)}`; // Display with 2 decimal places
 
-    // Optionally, highlight this point on the canvas (advanced feature for later)
-    // View.highlightPoint(currentStackParams.posX + x, View.canvas.height - Z_OFFSET - z); // Z_OFFSET is ground height
+    // Highlight this point on the canvas
+    const Z_OFFSET = 50; // Corresponds to groundHeightFromBottom in view.js
+    View.highlightPoint(currentStackParams.posX + x, View.canvas.height - Z_OFFSET - z, totalConcentration);
+    requestRender(); // Re-render to show the new point immediately
 }
 
 // --- Start the application ---
