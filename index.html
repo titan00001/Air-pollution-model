@@ -11,9 +11,14 @@
     <h1>Air pollution model</h1>
     <canvas id="screen"></canvas>
 
-    <h3>Gaussian Plume model for discharge = 20g/s and stability class = D. (All dimensions are in metre)</h3>
-    <p>Sudden change in concentration is seen due to change in dispersion coefficient</p>
-    <p>Concentration less than 1 microgram per m<sup>3</sup> is not rendered</p>
-    <script type="module" src="script.js"></script>
+    <h3>Gaussian Plume model. (All dimensions are in metre)</h3>
+    <!-- Parameters will be displayed and controlled via UI elements here eventually -->
+    <!-- Example: <input type="range" id="windSpeedSlider" min="0.5" max="20" step="0.5"> -->
+
+    <p>Sudden change in concentration is seen due to change in dispersion coefficient values at specific distances.</p>
+    <p>Concentration less than 1 microgram per m<sup>3</sup> is not rendered.</p>
+    
+    <!-- Load the controller as the main entry point -->
+    <script type="module" src="controller.js"></script>
 </body>
 </html>
