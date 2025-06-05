@@ -30,16 +30,16 @@ The application follows a Model-View-Controller (MVC) pattern:
 ## Development Roadmap
 
 ### Phase 1: Core Functionality & Architectural Refinement
--   [ ] **Refine MVC Structure:** Fully segregate `model.js`, `view.js` (refactor from `script.js`), and `controller.js` responsibilities.
+-   [x] **Refine MVC Structure:** Fully segregated `model.js`, `view.js` (refactored from `script.js`), and `controller.js` responsibilities. `model.js` now contains all core simulation logic.
 -   [x] **Smoke Engine:** Initial engine for smoke particle behavior.
 -   [ ] **Complete Smoke Rendering:**
-    -   [ ] Implement plume rise calculations (e.g., Briggs equations).
-    -   [ ] Define and apply boundary conditions (ground reflection, inversion layers if applicable).
-    -   [ ] Use a grayscale gradient or color map for smoke concentration visualization.
+    -   [~] Implement plume rise calculations (e.g., Briggs equations). (Basic implementation added to `model.js`; further refinement, especially for stable conditions, is pending).
+    -   [x] Define and apply boundary conditions (ground reflection, inversion layers if applicable). (Ground reflection included in Gaussian formula; inversion layers are a future consideration).
+    -   [x] Use a grayscale gradient or color map for smoke concentration visualization. (Grayscale implemented).
 -   [x] **Cloud Rendering:** Basic cloud rendering using bezier curves, arcs, ellipse.
 -   [ ] **Controller Implementation:**
     -   [ ] Enable adding new stacks to the simulation.
-    -   [ ] Implement controls for changing all environment and stack parameters.
+    -   [ ] Implement controls for changing all environment and stack parameters. (Architectural support in controller exists; UI elements are pending - aligns with Phase 2).
 
 ### Phase 2: UI/UX Enhancements & Parameter Validation
 -   [ ] **User-Friendly Controls:** Implement intuitive HTML controls (sliders, dropdowns, input fields) for all parameters with clear labels and units.

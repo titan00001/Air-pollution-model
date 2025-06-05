@@ -4,8 +4,8 @@ let canvas = null;
 let ctx = null;
 
 // Will be set by controller based on model data or UI
-let currentStackHeight = 100; 
-let currentStackBase = 0; // Will be calculated based on canvas height and ground height
+// let currentStackHeight = 100; // This is better managed by the model state passed to drawScene
+// let currentStackBase = 0; // This is calculated dynamically in initView and drawScene
 
 // Components (pure rendering functions/classes)
 
@@ -38,7 +38,7 @@ function Smoke(posX) {
     // x, y are canvas coordinates relative to smoke source origin if needed, or absolute
     // For this refactor, z in model becomes y on canvas (height)
     // x in model becomes x on canvas (downwind distance)
-    this.render = function(context, renderPoints, baseHeight, stackModelHeight) {
+    this.render = function(context, renderPoints, baseHeight, effectivePlumeTopHeight) {
         const intervalX = 3; // Define visual particle size or grid cell size
         const intervalY = 3;
 
@@ -50,11 +50,10 @@ function Smoke(posX) {
 
             let particleColor = colorUtility(point.concentration);
             
-            // Calculate canvas coordinates
-            // canvasX is point.x (downwind) + stack's posX
-            // canvasY is baseHeight - point.z (height from ground)
-            let canvasX = this.posX + point.x;
-            let canvasY = baseHeight - point.z;
+            // point.x is downwind distance from stack (model coordinates)
+            // point.z is height above ground (model coordinates)
+            let canvasX = this.posX + point.x; // stack's canvas X + downwind distance
+            let canvasY = baseHeight - point.z; // ground surface Y - height above ground
 
             context.beginPath();
             // Draw a small rectangle or circle for the particle/cell
@@ -71,20 +70,25 @@ function Smoke(posX) {
 }
 
 function colorUtility(concentration) {
-    // Same as before, could be made more configurable later
-    if(concentration < 50) {
-        return "rgb(0, 204, 0)";
-    } else if (concentration < 100) {
-        return "rgb(102, 255, 102)"
-    } else if (concentration < 250) {
-        return "rgb(255, 255, 26)"
-    } else if (concentration < 350) {
-        return "rgb(255, 153, 51)"
-    } else if (concentration < 430) {
-        return "rgb(230, 0, 0)"
-    } else {
-        return "rgb(204, 41, 0)"
+    const maxConcentrationVisual = 1000; // Max concentration for visual scaling (µg/m³)
+    const minGray = 30;  // Darkest gray (for max concentration)
+    const maxGray = 220; // Lightest gray (for min concentration > 0)
+
+    if (concentration <= 0) {
+        return `rgb(${maxGray}, ${maxGray}, ${maxGray})`; // or transparent
     }
+
+    // Normalize concentration to a 0-1 scale, capped at maxConcentrationVisual
+    const normalizedConc = Math.min(concentration, maxConcentrationVisual) / maxConcentrationVisual;
+    
+    // Interpolate gray value: maxGray at 0 conc, minGray at 1 (max) conc
+    let grayValue = Math.floor(maxGray - normalizedConc * (maxGray - minGray));
+    
+    // Ensure grayValue is within [minGray, maxGray] range, though calculation should handle this.
+    // Clamping is good practice anyway.
+    grayValue = Math.max(minGray, Math.min(maxGray, grayValue)); 
+
+    return `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
 }
 
 function Sky() {
@@ -191,17 +195,23 @@ function ScaleY(interval, canvasHeight, groundSurfaceY, stackModelHeight) {
  */
 function initView(canvasElement) {
     canvas = canvasElement;
-    // Set canvas dimensions (can be dynamic based on window or fixed)
-    canvas.width = window.innerWidth * 0.75; 
-    canvas.height = window.innerHeight * 0.75;
+    // Set canvas dimensions to be more responsive
+    canvas.width = window.innerWidth * 0.95; 
+    canvas.height = window.innerHeight * 0.90;
+    
     // canvas.width = 2000; // Or fixed, as in original script.scss
     // canvas.height = 1000;
 
     ctx = canvas.getContext("2d");
-    currentStackHeight = 100; // Default, can be passed from model
-    // ground height from bottom of canvas
-    const visualGroundHeight = 50; 
-    currentStackBase = canvas.height - visualGroundHeight;
+
+    // Add a resize listener to adjust canvas on window resize
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth * 0.95;
+        canvas.height = window.innerHeight * 0.90;
+        // Note: Re-rendering after resize might be needed if aspect ratio changes affect simulation visualization.
+        // This would typically be triggered by the controller.
+        // For now, this just resizes. A full re-render call from controller would be more robust.
+    });
 }
 
 /**
@@ -218,40 +228,41 @@ function drawScene(modelState) {
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Get parameters from modelState (example structure)
     const stackParams = modelState.stackParameters;
     const envParams = modelState.environmentParameters;
-    const smokeRenderPoints = modelState.smokeData; // This will be an array of {x, z, concentration}
+    const smokeRenderPoints = modelState.smokeData; 
 
-    // Visual elements
     const groundHeightFromBottom = 50;
     const ground = new Ground(groundHeightFromBottom);
     const sky = new Sky();
     const cloudCover = new CloudCover(envParams.cloudCover || 5, canvas.width, canvas.height - groundHeightFromBottom);
     
-    // Stack object from view.js, using model parameters
-    // stackParams.height is the effective plume height from model
-    // stackParams.diameter is physical diameter
-    // stackParams.posX is the model's x-position for the stack (view might adapt this)
-    const stackDrawable = new Stack(stackParams.diameter, stackParams.height, stackParams.posX);
+    // Use physicalHeight for drawing the stack structure
+    const stackDrawable = new Stack(stackParams.diameter, stackParams.physicalHeight, stackParams.posX);
     
-    // Smoke object from view.js, needs stack's X position for its origin
     const smokeDrawable = new Smoke(stackParams.posX);
 
-    // Render sequence
     const groundSurfaceY = ground.render(ctx, canvas.width, canvas.height);
     sky.render(ctx, canvas.width, groundSurfaceY);
     cloudCover.render(ctx);
 
-    // Render smoke: smokeRenderPoints should be pre-calculated by controller using model
     if (smokeRenderPoints) {
-        smokeDrawable.render(ctx, smokeRenderPoints, groundSurfaceY, stackParams.height);
+        // smokeDrawable.render takes the effective stack height (stackParams.height which includes plume rise)
+        // for correct positioning of smoke relative to its origin at top of effective plume.
+        // However, individual smoke particle z values are from ground level.
+        // The baseHeight for smoke rendering should be groundSurfaceY.
+        // The stackModelHeight param in smokeDrawable.render was for the old system, let's clarify.
+        // Smoke particles' z values are absolute heights from ground.
+        // The smokeDrawable.render will use its this.posX and the particle.x for X,
+        // and baseHeight - particle.z for Y.
+        smokeDrawable.render(ctx, smokeRenderPoints, groundSurfaceY, stackParams.height /* effective plume height */);
     }
     stackDrawable.render(ctx, groundSurfaceY);
     
-    // Scales - these might need actual stack height from model for Y scale relevance
+    // Adjust Y scale to be based on physical stack height and extend a bit for plume
+    const scaleYMaxHeight = stackParams.physicalHeight + (stackParams.height - stackParams.physicalHeight) + 50; // physical + plume rise + buffer
     const scaleX = new ScaleX(50, canvas.width, groundSurfaceY);
-    const scaleY = new ScaleY(50, canvas.height, groundSurfaceY, stackParams.height);
+    const scaleY = new ScaleY(50, canvas.height, groundSurfaceY, scaleYMaxHeight);
     scaleX.render(ctx);
     scaleY.render(ctx);
 }

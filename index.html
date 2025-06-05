@@ -5,20 +5,94 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Air pollution model</title>
+    <title>Air Pollution Dispersion Model</title>
 </head>
 <body>
-    <h1>Air pollution model</h1>
-    <canvas id="screen"></canvas>
+    <header>
+        <h1>Air Pollution Gaussian Plume Model</h1>
+    </header>
 
-    <h3>Gaussian Plume model. (All dimensions are in metre)</h3>
-    <!-- Parameters will be displayed and controlled via UI elements here eventually -->
-    <!-- Example: <input type="range" id="windSpeedSlider" min="0.5" max="20" step="0.5"> -->
+    <main>
+        <section id="description">
+            <h2>About This Project</h2>
+            <div>
+                <h3>For the Curious (Layman)</h3>
+                <p>Imagine a factory chimney releasing smoke. This tool shows you a simplified picture of how that smoke cloud (or "plume") travels and spreads out in the air. You can change things like how tall the chimney is, how fast the wind is blowing, and even how sunny or cloudy it is (which affects how the smoke mixes). This helps us understand where pollution might go and how concentrated it could be at different spots downwind. It's like a weather forecast, but for smoke!</p>
+            </div>
+            <div>
+                <h3>For the Engineer/Scientist</h3>
+                <p>This application provides an interactive visualization of the Gaussian plume model for estimating pollutant dispersion from a point source. Users can adjust key stack parameters (physical height, diameter, exit velocity, gas temperature, emission rate) and environmental conditions (wind velocity, wind direction, Pasquill stability class, ambient temperature, background concentration). The model calculates effective stack height using Briggs plume rise equations and then applies the standard Gaussian dispersion formulas to predict downwind concentrations. The visualization displays the plume, stack, and relevant scales on an HTML canvas, updating in real-time as parameters are modified. This tool can be used for educational purposes, preliminary impact assessments, or "what-if" scenario analysis for single point-source emissions.</p>
+            </div>
+        </section>
 
-    <p>Sudden change in concentration is seen due to change in dispersion coefficient values at specific distances.</p>
-    <p>Concentration less than 1 microgram per m<sup>3</sup> is not rendered.</p>
+        <section id="controls">
+            <h2>Controls</h2>
+            <div>
+                <label for="stackHeight">Stack Physical Height (m): </label>
+                <input type="range" id="stackHeight" name="stackHeight" min="10" max="200" value="70">
+                <span id="stackHeightValue">70</span> m
+            </div>
+            <div>
+                <label for="windVelocity">Wind Velocity (m/s): </label>
+                <input type="range" id="windVelocity" name="windVelocity" min="0.5" max="20" step="0.5" value="7">
+                <span id="windVelocityValue">7</span> m/s
+            </div>
+            <div>
+                <label for="windDirection">Wind Direction (degrees from N): </label>
+                <input type="number" id="windDirection" name="windDirection" min="0" max="360" value="270" step="5">
+                <span id="windDirectionValue">270</span> °
+            </div>
+            <div>
+                <label for="stabilityClass">Atmospheric Stability Class: </label>
+                <select id="stabilityClass" name="stabilityClass">
+                    <option value="A">A (Very Unstable)</option>
+                    <option value="B">B (Unstable)</option>
+                    <option value="C">C (Slightly Unstable)</option>
+                    <option value="D" selected>D (Neutral)</option>
+                    <option value="E">E (Slightly Stable)</option>
+                    <option value="F">F (Stable)</option>
+                </select>
+            </div>
+            <div>
+                <label for="ambientTemperature">Ambient Temperature (°C): </label>
+                <input type="number" id="ambientTemperature" name="ambientTemperature" min="-30" max="50" value="25">
+                <span id="ambientTemperatureValue">25</span> °C
+            </div>
+            <div>
+                <label for="backgroundConcentration">Background Concentration (µg/m³): </label>
+                <input type="number" id="backgroundConcentration" name="backgroundConcentration" min="0" max="500" value="0">
+                <span id="backgroundConcentrationValue">0</span> µg/m³
+            </div>
+            <hr>
+            <h3>Check Concentration at Point</h3>
+            <p>(Coordinates relative to stack base: X downwind, Y crosswind, Z height above ground)</p>
+            <div>
+                <label for="pointX">X (m): </label>
+                <input type="number" id="pointX" name="pointX" value="100" step="10">
+            </div>
+            <div>
+                <label for="pointY">Y (m): </label>
+                <input type="number" id="pointY" name="pointY" value="0" step="5">
+            </div>
+            <div>
+                <label for="pointZ">Z (m): </label>
+                <input type="number" id="pointZ" name="pointZ" value="0" step="5">
+            </div>
+            <button id="checkConcentrationButton">Check Concentration</button>
+            <div>
+                <strong>Calculated Concentration: <span id="pointConcentrationResult">---</span> µg/m³</strong>
+            </div>
+        </section>
+        
+        <section id="simulationCanvas">
+            <canvas id="screen"></canvas>
+        </section>
+    </main>
+
+    <footer>
+        <p>Gaussian Plume model. (All dimensions are in metres). Concentration < 1 µg/m³ not rendered. Wind direction does not yet rotate the plume.</p>
+    </footer>
     
-    <!-- Load the controller as the main entry point -->
     <script type="module" src="controller.js"></script>
 </body>
 </html>
